@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -456,7 +457,12 @@ public abstract class AbstractStorageTerminalScreen<T extends StorageTerminalMen
 					if (slot.stack.getQuantity() > 9999) {
 						ClientUtil.setTooltip(Component.translatable("tooltip.toms_storage.amount", slot.stack.getQuantity()));
 					}
-					st.renderTooltip(font, slot.stack.getQuantity() == 0 ? slot.stack.getStack() : slot.stack.getActualStack(), mouseX, mouseY);
+					try {
+						st.renderTooltip(font, slot.stack.getQuantity() == 0 ? slot.stack.getStack() : slot.stack.getActualStack(), mouseX, mouseY);
+					} catch (IllegalStateException e) {
+						ClientUtil.setTooltip(Component.translatable("tooltip.toms_storage.amount", slot.stack.getQuantity()));
+						st.renderTooltip(font, slot.stack.getStack(), mouseX, mouseY);//Render with stack size 1
+					}
 					ClientUtil.setTooltip();
 				}
 			} else {
@@ -751,5 +757,10 @@ public abstract class AbstractStorageTerminalScreen<T extends StorageTerminalMen
 
 	public boolean isSmartItemSearchOn() {
 		return (buttonSearchType.getSearchType() & 8) == 0;
+	}
+
+	@Override
+	public void getExclusionAreas(Consumer<Box> consumer) {
+		consumer.accept(new Box(leftPos - 30, topPos, 30, imageHeight));
 	}
 }
